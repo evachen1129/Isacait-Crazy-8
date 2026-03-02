@@ -9,15 +9,18 @@ export interface CardData {
 
 export type GameStatus = 'menu' | 'playing' | 'suit_picking' | 'game_over';
 
+export type PlayerId = 'player' | 'ai1' | 'ai2';
+
 export interface GameState {
   playerHand: CardData[];
-  aiHand: CardData[];
+  ai1Hand: CardData[];
+  ai2Hand: CardData[];
   drawPile: CardData[];
   discardPile: CardData[];
   currentSuit: Suit;
   currentRank: Rank;
-  turn: 'player' | 'ai';
+  turn: PlayerId;
   status: GameStatus;
-  winner: 'player' | 'ai' | null;
+  winner: PlayerId | null;
   lastAction: string;
 }

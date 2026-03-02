@@ -26,28 +26,28 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart }) => {
           >
             <Shield className="text-yellow-600" size={48} />
           </motion.div>
-          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Isacait's Crazy Eight</h1>
-          <p className="text-yellow-600 font-serif italic">The Wizarding Card Challenge</p>
+          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">艾萨凯特的疯狂 8</h1>
+          <p className="text-yellow-600 font-serif italic">巫师世界的卡牌对决</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 mb-10">
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-yellow-500 font-bold uppercase text-xs tracking-widest">
-              <BookOpen size={16} /> How to Play
+              <BookOpen size={16} /> 游戏玩法
             </h3>
             <ul className="text-sm text-slate-300 space-y-2 list-disc pl-4">
-              <li>Match the <b>Suit</b> or <b>Rank</b> of the top card.</li>
-              <li>If you can't play, <b>Draw</b> from the magical deck.</li>
-              <li>First wizard to clear their hand wins!</li>
+              <li>打出与弃牌堆顶部<b>花色</b>或<b>点数</b>相同的牌。</li>
+              <li>如果没有可出的牌，从魔法牌堆中<b>摸牌</b>。</li>
+              <li>第一位清空手牌的巫师获胜！</li>
             </ul>
           </div>
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-yellow-500 font-bold uppercase text-xs tracking-widest">
-              <Zap size={16} /> Special Rules
+              <Zap size={16} /> 特殊规则
             </h3>
             <ul className="text-sm text-slate-300 space-y-2 list-disc pl-4">
-              <li><b>Wild 8s:</b> Play an 8 anytime to change the current suit.</li>
-              <li><b>Infinite Draw:</b> Draw until you find a playable card.</li>
+              <li><b>万能 8：</b>随时可以打出 8 并更改当前花色。</li>
+              <li><b>无限摸牌：</b>可以一直摸牌直到摸到可出的牌。</li>
             </ul>
           </div>
         </div>
@@ -58,11 +58,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart }) => {
         >
           <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
           <Play fill="currentColor" />
-          ENTER THE DUEL
+          进入对决
         </button>
         
         <p className="text-center mt-6 text-[10px] text-slate-500 uppercase tracking-widest">
-          A Magical Twist on a Classic Game
+          经典游戏的魔法演绎
         </p>
       </div>
     </motion.div>

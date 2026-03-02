@@ -1,6 +1,6 @@
 import React from 'react';
 import { Suit } from '../types';
-import { SUIT_SYMBOLS, SUIT_COLORS, SUITS } from '../constants';
+import { SUIT_SYMBOLS, SUIT_COLORS, SUITS, SUIT_NAMES } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface SuitPickerProps {
@@ -23,7 +23,7 @@ export const SuitPicker: React.FC<SuitPickerProps> = ({ onPick, isOpen }) => {
             animate={{ scale: 1, y: 0 }}
             className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full text-center"
           >
-            <h2 className="text-2xl font-bold mb-6 text-slate-800">Wild 8! Pick a Suit</h2>
+            <h2 className="text-2xl font-bold mb-6 text-slate-800">万能 8！请选择花色</h2>
             <div className="grid grid-cols-2 gap-4">
               {SUITS.map((suit) => (
                 <button
@@ -38,7 +38,7 @@ export const SuitPicker: React.FC<SuitPickerProps> = ({ onPick, isOpen }) => {
                     {SUIT_SYMBOLS[suit]}
                   </span>
                   <span className="text-sm font-semibold uppercase tracking-wider text-slate-500 group-hover:text-emerald-700">
-                    {suit}
+                    {SUIT_NAMES[suit]}
                   </span>
                 </button>
               ))}

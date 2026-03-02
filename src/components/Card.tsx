@@ -34,7 +34,7 @@ export const Card: React.FC<CardProps> = ({ card, isFaceDown, onClick, isPlayabl
             <span className="text-yellow-600 font-black text-[10px] sm:text-sm leading-none">CRAZY</span>
             <span className="text-yellow-500 font-black text-lg sm:text-2xl leading-none">8</span>
           </div>
-          <span className="text-[8px] sm:text-[10px] text-yellow-600/50 font-serif mt-2 tracking-widest uppercase">Wizarding World</span>
+          <span className="text-[8px] sm:text-[10px] text-yellow-600/50 font-serif mt-2 tracking-widest uppercase">巫师世界</span>
         </div>
 
         {/* Corner Ornaments */}

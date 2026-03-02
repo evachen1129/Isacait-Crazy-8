@@ -17,4 +17,11 @@ export const SUIT_COLORS: Record<Suit, string> = {
   spades: 'text-slate-900',
 };
 
-export const INITIAL_HAND_SIZE = 8;
+export const SUIT_NAMES: Record<Suit, string> = {
+  hearts: '红心',
+  diamonds: '方块',
+  clubs: '梅花',
+  spades: '黑桃',
+};
+
+export const INITIAL_HAND_SIZE = 5;

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { CardData, GameState, Suit, Rank, GameStatus } from '../types';
+import { CardData, GameState, Suit, Rank, GameStatus, PlayerId } from '../types';
 import { SUITS, RANKS, INITIAL_HAND_SIZE } from '../constants';
 
 const createDeck = (): CardData[] => {
@@ -12,16 +12,30 @@ const createDeck = (): CardData[] => {
   return deck.sort(() => Math.random() - 0.5);
 };
 
+const getNextTurn = (current: PlayerId): PlayerId => {
+  if (current === 'player') return 'ai1';
+  if (current === 'ai1') return 'ai2';
+  return 'player';
+};
+
+const getHandKey = (player: PlayerId): 'playerHand' | 'ai1Hand' | 'ai2Hand' => {
+  if (player === 'player') return 'playerHand';
+  if (player === 'ai1') return 'ai1Hand';
+  return 'ai2Hand';
+};
+
 export const useCrazyEights = () => {
   const [state, setState] = useState<GameState>(() => {
     const deck = createDeck();
     const playerHand = deck.splice(0, INITIAL_HAND_SIZE);
-    const aiHand = deck.splice(0, INITIAL_HAND_SIZE);
+    const ai1Hand = deck.splice(0, INITIAL_HAND_SIZE);
+    const ai2Hand = deck.splice(0, INITIAL_HAND_SIZE);
     const firstDiscard = deck.pop()!;
     
     return {
       playerHand,
-      aiHand,
+      ai1Hand,
+      ai2Hand,
       drawPile: deck,
       discardPile: [firstDiscard],
       currentSuit: firstDiscard.suit,
@@ -29,7 +43,7 @@ export const useCrazyEights = () => {
       turn: 'player',
       status: 'menu',
       winner: null,
-      lastAction: 'Welcome! Press Start to play.',
+      lastAction: '欢迎！点击开始游戏。',
     };
   });
 
@@ -41,13 +55,16 @@ export const useCrazyEights = () => {
     if (newState.playerHand.length === 0) {
       return { ...newState, status: 'game_over' as GameStatus, winner: 'player' as const };
     }
-    if (newState.aiHand.length === 0) {
-      return { ...newState, status: 'game_over' as GameStatus, winner: 'ai' as const };
+    if (newState.ai1Hand.length === 0) {
+      return { ...newState, status: 'game_over' as GameStatus, winner: 'ai1' as const };
+    }
+    if (newState.ai2Hand.length === 0) {
+      return { ...newState, status: 'game_over' as GameStatus, winner: 'ai2' as const };
     }
     return newState;
   };
 
-  const drawCard = useCallback((target: 'player' | 'ai') => {
+  const drawCard = useCallback((target: PlayerId) => {
     setState((prev) => {
       if (prev.turn !== target || prev.status !== 'playing') return prev;
       
@@ -55,43 +72,40 @@ export const useCrazyEights = () => {
         // If deck is empty, switch turn
         return { 
           ...prev, 
-          turn: target === 'player' ? 'ai' : 'player', 
-          lastAction: `${target} passed (deck empty).` 
+          turn: getNextTurn(target), 
+          lastAction: `${target === 'player' ? '你' : target} 跳过了回合 (牌堆已空)。` 
         };
       }
 
       const newDrawPile = [...prev.drawPile];
       const drawnCard = newDrawPile.pop()!;
-      const newHand = target === 'player' ? [...prev.playerHand, drawnCard] : [...prev.aiHand, drawnCard];
+      const handKey = getHandKey(target);
+      const newHand = [...prev[handKey], drawnCard];
 
       return {
         ...prev,
         drawPile: newDrawPile,
-        [target === 'player' ? 'playerHand' : 'aiHand']: newHand,
-        // Do NOT switch turn automatically. 
-        // The player can play the drawn card if it matches, or draw again.
-        lastAction: `${target} drew a card.`,
+        [handKey]: newHand,
+        lastAction: `${target === 'player' ? '你' : target} 摸了一张牌。`,
       };
     });
   }, []);
 
-  const playCard = useCallback((card: CardData, target: 'player' | 'ai') => {
+  const playCard = useCallback((card: CardData, target: PlayerId) => {
     setState((prev) => {
       if (prev.turn !== target || prev.status !== 'playing') return prev;
 
       const isMatch = card.rank === '8' || card.suit === prev.currentSuit || card.rank === prev.currentRank;
       if (!isMatch) return prev;
 
-      const handKey = target === 'player' ? 'playerHand' : 'aiHand';
+      const handKey = getHandKey(target);
       const newHand = prev[handKey].filter((c) => c.id !== card.id);
       const newDiscardPile = [...prev.discardPile, card];
 
       let nextStatus: GameStatus = 'playing';
-      let nextTurn = target === 'player' ? 'ai' : 'player';
 
       if (card.rank === '8') {
         nextStatus = 'suit_picking';
-        // If AI plays 8, we'll handle suit picking automatically in a separate effect or logic
       }
 
       const newState: GameState = {
@@ -101,8 +115,8 @@ export const useCrazyEights = () => {
         currentSuit: card.suit,
         currentRank: card.rank,
         status: nextStatus,
-        turn: nextStatus === 'suit_picking' ? target : (target === 'player' ? 'ai' : 'player'),
-        lastAction: `${target} played ${card.rank} of ${card.suit}.`,
+        turn: nextStatus === 'suit_picking' ? target : getNextTurn(target),
+        lastAction: `${target === 'player' ? '你' : target} 打出了 ${card.rank} (${card.suit})。`,
       };
 
       return checkWinner(newState);
@@ -116,8 +130,8 @@ export const useCrazyEights = () => {
         ...prev,
         currentSuit: suit,
         status: 'playing',
-        turn: prev.turn === 'player' ? 'ai' : 'player',
-        lastAction: `${prev.turn} picked ${suit}.`,
+        turn: getNextTurn(prev.turn),
+        lastAction: `${prev.turn === 'player' ? '你' : prev.turn} 选择了 ${suit}。`,
       };
     });
   }, []);
@@ -125,12 +139,14 @@ export const useCrazyEights = () => {
   const resetGame = () => {
     const deck = createDeck();
     const playerHand = deck.splice(0, INITIAL_HAND_SIZE);
-    const aiHand = deck.splice(0, INITIAL_HAND_SIZE);
+    const ai1Hand = deck.splice(0, INITIAL_HAND_SIZE);
+    const ai2Hand = deck.splice(0, INITIAL_HAND_SIZE);
     const firstDiscard = deck.pop()!;
     
     setState({
       playerHand,
-      aiHand,
+      ai1Hand,
+      ai2Hand,
       drawPile: deck,
       discardPile: [firstDiscard],
       currentSuit: firstDiscard.suit,
@@ -138,37 +154,43 @@ export const useCrazyEights = () => {
       turn: 'player',
       status: 'playing',
       winner: null,
-      lastAction: 'Game reset! Your turn.',
+      lastAction: '游戏重置！轮到你了。',
     });
   };
 
   // AI Logic
   useEffect(() => {
-    if (state.turn === 'ai' && state.status === 'playing' && !state.winner) {
+    if (state.turn !== 'player' && state.status === 'playing' && !state.winner) {
+      const currentAI = state.turn;
+      const handKey = getHandKey(currentAI);
+      const hand = state[handKey];
+
       const timer = setTimeout(() => {
-        const playableCards = state.aiHand.filter(
+        const playableCards = hand.filter(
           (c) => c.rank === '8' || c.suit === state.currentSuit || c.rank === state.currentRank
         );
 
         if (playableCards.length > 0) {
-          // AI plays the first playable card
           const cardToPlay = playableCards[0];
-          playCard(cardToPlay, 'ai');
+          playCard(cardToPlay, currentAI);
         } else {
-          drawCard('ai');
+          drawCard(currentAI);
         }
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [state.turn, state.status, state.aiHand, state.currentSuit, state.currentRank, state.winner, playCard, drawCard]);
+  }, [state.turn, state.status, state.playerHand, state.ai1Hand, state.ai2Hand, state.currentSuit, state.currentRank, state.winner, playCard, drawCard]);
 
   // AI Suit Picking
   useEffect(() => {
-    if (state.turn === 'ai' && state.status === 'suit_picking') {
+    if (state.turn !== 'player' && state.status === 'suit_picking') {
+      const currentAI = state.turn;
+      const handKey = getHandKey(currentAI);
+      const hand = state[handKey];
+
       const timer = setTimeout(() => {
-        // AI picks the suit it has the most of
         const suitCounts: Record<Suit, number> = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
-        state.aiHand.forEach((c) => suitCounts[c.suit]++);
+        hand.forEach((c) => suitCounts[c.suit]++);
         const bestSuit = (Object.keys(suitCounts) as Suit[]).reduce((a, b) => 
           suitCounts[a] > suitCounts[b] ? a : b
         );
@@ -176,7 +198,7 @@ export const useCrazyEights = () => {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [state.turn, state.status, state.aiHand, pickSuit]);
+  }, [state.turn, state.status, state.playerHand, state.ai1Hand, state.ai2Hand, pickSuit]);
 
   return { state, playCard, drawCard, pickSuit, resetGame, startGame };
 };

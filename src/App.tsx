@@ -3,7 +3,7 @@ import { Card } from './components/Card';
 import { SuitPicker } from './components/SuitPicker';
 import { GameOver } from './components/GameOver';
 import { StartMenu } from './components/StartMenu';
-import { SUIT_SYMBOLS, SUIT_COLORS } from './constants';
+import { SUIT_SYMBOLS, SUIT_COLORS, SUIT_NAMES } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info, RefreshCw, Layers } from 'lucide-react';
 
@@ -33,23 +33,23 @@ export default function App() {
             <span className="font-black text-xl">8</span>
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-none">Isacait's Crazy Eight</h1>
-            <p className="text-[10px] uppercase tracking-widest opacity-50 font-semibold">Standard 52-Card Edition</p>
+            <h1 className="font-bold text-lg leading-none">艾萨凯特的疯狂 8</h1>
+            <p className="text-[10px] uppercase tracking-widest opacity-50 font-semibold">标准 52 张扑克版</p>
           </div>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[10px] uppercase opacity-50 font-bold">Current Suit</span>
+            <span className="text-[10px] uppercase opacity-50 font-bold">当前花色</span>
             <div className={`flex items-center gap-1 font-bold ${SUIT_COLORS[state.currentSuit]}`}>
               <span className="text-xl">{SUIT_SYMBOLS[state.currentSuit]}</span>
-              <span className="capitalize">{state.currentSuit}</span>
+              <span className="capitalize">{SUIT_NAMES[state.currentSuit]}</span>
             </div>
           </div>
           <button 
             onClick={resetGame}
             className="p-2 hover:bg-white/10 rounded-full transition-colors"
-            title="Reset Game"
+            title="重置游戏"
           >
             <RefreshCw size={20} />
           </button>
@@ -57,72 +57,87 @@ export default function App() {
       </header>
 
       {/* Game Board */}
-      <main className="flex-1 relative flex flex-col p-4 sm:p-8 gap-8">
+      <main className="flex-1 relative flex flex-col p-4 sm:p-8 gap-4 overflow-y-auto">
         
-        {/* AI Hand */}
+        {/* AI 1 Hand (Top) */}
         <section className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">AI Opponent</span>
-            <div className="h-px w-12 bg-white/10" />
-            <span className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono">{state.aiHand.length} Cards</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">AI 1</span>
+            <div className={`w-2 h-2 rounded-full ${state.turn === 'ai1' ? 'bg-amber-500 animate-pulse' : 'bg-white/10'}`} />
+            <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{state.ai1Hand.length} 张牌</span>
           </div>
-          <div className="flex -space-x-8 sm:-space-x-12 hover:-space-x-4 sm:hover:-space-x-6 transition-all duration-300">
-            {state.aiHand.map((_, i) => (
-              <Card key={i} isFaceDown className="shadow-2xl" />
+          <div className="flex -space-x-10 sm:-space-x-14 hover:-space-x-4 sm:hover:-space-x-6 transition-all duration-300">
+            {state.ai1Hand.map((_, i) => (
+              <Card key={i} isFaceDown className="shadow-xl scale-75 sm:scale-90" />
             ))}
           </div>
         </section>
 
-        {/* Center Area (Deck & Discard) */}
-        <section className="flex-1 flex items-center justify-center gap-8 sm:gap-16">
-          {/* Draw Pile */}
-          <div className="flex flex-col items-center gap-3 group">
-            <div className="relative">
-              {/* Stack effect */}
-              <div className="absolute inset-0 translate-x-1 translate-y-1 bg-indigo-900 rounded-lg border border-white/10" />
-              <div className="absolute inset-0 translate-x-2 translate-y-2 bg-indigo-950 rounded-lg border border-white/10" />
-              <Card 
-                isFaceDown 
-                onClick={() => state.turn === 'player' && drawCard('player')}
-                className={`
-                  relative z-10 transition-transform active:scale-95
-                  ${state.turn === 'player' ? 'cursor-pointer hover:-translate-y-2 ring-2 ring-emerald-400 ring-offset-4 ring-offset-[#1a2e1a]' : 'opacity-50'}
-                `}
-              />
+        <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16 relative">
+          {/* AI 2 Hand (Side on Desktop, Middle on Mobile) */}
+          <section className="sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2 flex flex-col items-center gap-2 z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">AI 2</span>
+              <div className={`w-2 h-2 rounded-full ${state.turn === 'ai2' ? 'bg-amber-500 animate-pulse' : 'bg-white/10'}`} />
+              <span className="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono">{state.ai2Hand.length} 张牌</span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold opacity-50">
-              <Layers size={14} />
-              <span>{state.drawPile.length}</span>
-            </div>
-          </div>
-
-          {/* Discard Pile */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative">
-              {/* Previous cards in discard pile (visual only) */}
-              {state.discardPile.slice(-3, -1).map((card, i) => (
-                <div 
-                  key={card.id}
-                  className="absolute inset-0 bg-white rounded-lg border border-slate-200 opacity-20"
-                  style={{ transform: `rotate(${(i + 1) * 5}deg) translate(${i * 2}px, ${i * 2}px)` }}
-                />
+            <div className="flex sm:flex-col -space-x-10 sm:-space-x-0 sm:-space-y-16 hover:-space-x-4 sm:hover:-space-y-8 transition-all duration-300">
+              {state.ai2Hand.map((_, i) => (
+                <Card key={i} isFaceDown className="shadow-xl scale-75 sm:scale-90" />
               ))}
-              <Card card={topDiscard} className="relative z-10 shadow-2xl" />
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">Discard Pile</span>
-              <div className={`text-sm font-bold ${SUIT_COLORS[state.currentSuit]}`}>
-                {SUIT_SYMBOLS[state.currentSuit]} {state.currentSuit.toUpperCase()}
+          </section>
+
+          {/* Center Area (Deck & Discard) */}
+          <div className="flex items-center justify-center gap-8 sm:gap-16">
+            {/* Draw Pile */}
+            <div className="flex flex-col items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 translate-x-1 translate-y-1 bg-indigo-900 rounded-lg border border-white/10" />
+                <div className="absolute inset-0 translate-x-2 translate-y-2 bg-indigo-950 rounded-lg border border-white/10" />
+                <Card 
+                  isFaceDown 
+                  onClick={() => state.turn === 'player' && drawCard('player')}
+                  className={`
+                    relative z-10 transition-transform active:scale-95
+                    ${state.turn === 'player' ? 'cursor-pointer hover:-translate-y-2 ring-2 ring-emerald-400 ring-offset-4 ring-offset-[#1a2e1a]' : 'opacity-50'}
+                  `}
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs font-bold opacity-50">
+                <Layers size={14} />
+                <span>{state.drawPile.length}</span>
+              </div>
+            </div>
+
+            {/* Discard Pile */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                {state.discardPile.slice(-3, -1).map((card, i) => (
+                  <div 
+                    key={card.id}
+                    className="absolute inset-0 bg-white rounded-lg border border-slate-200 opacity-20"
+                    style={{ transform: `rotate(${(i + 1) * 5}deg) translate(${i * 2}px, ${i * 2}px)` }}
+                  />
+                ))}
+                <Card card={topDiscard} className="relative z-10 shadow-2xl" />
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">弃牌堆</span>
+                <div className={`text-sm font-bold ${SUIT_COLORS[state.currentSuit]}`}>
+                  {SUIT_SYMBOLS[state.currentSuit]} {SUIT_NAMES[state.currentSuit]}
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Player Hand */}
-        <section className="flex flex-col items-center gap-4">
+        <section className="flex flex-col items-center gap-4 mt-auto">
           <div className="flex items-center gap-2">
             <div className="h-px w-12 bg-white/10" />
-            <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">Your Hand</span>
+            <span className="text-[10px] uppercase font-bold tracking-widest opacity-50">你的手牌</span>
+            <div className={`w-2 h-2 rounded-full ${state.turn === 'player' ? 'bg-emerald-500 animate-pulse' : 'bg-white/10'}`} />
             <div className="h-px w-12 bg-white/10" />
           </div>
           
@@ -151,7 +166,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full animate-pulse ${state.turn === 'player' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
           <p className="text-sm font-medium">
-            {state.turn === 'player' ? "Your Turn" : "AI is thinking..."}
+            {state.turn === 'player' ? "轮到你了" : `${state.turn.toUpperCase()} 正在思考...`}
           </p>
           <div className="h-4 w-px bg-white/20" />
           <p className="text-xs opacity-70 italic">{state.lastAction}</p>
@@ -163,12 +178,12 @@ export default function App() {
               onClick={() => drawCard('player')}
               className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"
             >
-              Pass Turn
+              跳过回合
             </button>
           )}
           <div className="flex items-center gap-2">
             <Info size={14} className="opacity-50" />
-            <span className="text-[10px] opacity-50 font-bold uppercase tracking-tighter">Wild 8s change suit</span>
+            <span className="text-[10px] opacity-50 font-bold uppercase tracking-tighter">万能 8 可更改花色</span>
           </div>
         </div>
       </footer>
